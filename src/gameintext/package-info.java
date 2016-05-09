@@ -1,8 +1,0 @@
-/**
- * 
- */
-/**
- * @author mario
- *
- */
-package gameintext;
