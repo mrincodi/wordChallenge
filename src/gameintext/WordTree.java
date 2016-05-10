@@ -43,8 +43,9 @@ public class WordTree {
 	}
 
 	public void addWordsFromTextFile ( String filename ) throws java.io.IOException{
-		java.io.FileReader fr = new java.io.FileReader ( filename );
-		java.io.BufferedReader br = new java.io.BufferedReader ( fr );
+		java.io.BufferedReader br = new java.io.BufferedReader(
+				   new java.io.InputStreamReader(
+		                      new java.io.FileInputStream(filename), "UTF8"));
 
 		String line = br.readLine();
 		while (line != null) {
