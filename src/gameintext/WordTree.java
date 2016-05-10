@@ -29,15 +29,16 @@ public class WordTree {
 	private String NO_WORD_FOUND="++";
 	public static int MIN_WORD_SIZE=3;	// Just for the main method.
 	public static int GAME_WORD_SIZE=6;	// Just for the main method.
-			
-	
+
 	//TODO: Clean the Spanish "lemario". Take out words with capital letters.
-	//TODO: Also (maybe), consider making 'รก' equivalent to 'a' and so forth (although I like
+	//TODO: Also (maybe), consider making 'แ' equivalent to 'a' and so forth (although I like
 	//		to consider them as different letters).
 	//FYI: The lemario was downloaded from here:  http://www.teoruiz.com/lemario
 	static String WORDS="etc/lemario-20101017.txt";
 	java.util.HashMap < Character, java.util.HashMap > map;
 
+	java.util.ArrayList <String > possibleWordsArray = new java.util.ArrayList <String > ();
+	
 	public WordTree (){
 		map = new java.util.HashMap <Character, java.util.HashMap >  ();
 	}
@@ -64,6 +65,9 @@ public class WordTree {
 
 	public void addWord ( String word ){
 		addWord ( word, map);
+		if ( word.length() == GAME_WORD_SIZE) {
+			possibleWordsArray.add(word);
+		}
 	}
 
 	public void addWord ( String word, java.util.HashMap < Character, java.util.HashMap > aMap){
@@ -105,7 +109,6 @@ public class WordTree {
 		java.util.Arrays.sort(charArray);
 		String sortedChars =new String ( charArray );
 
-
 		return getAllWordsWithLetters ("", sortedChars, map );
 	}
 
@@ -145,14 +148,17 @@ public class WordTree {
 				wordList.addAll(getAllWordsWithLetters(newCarry, otherChars, aMap.get(thisChar)));
 
 			}
-
 		}
-
 		return wordList;
 	}
 
-	public String getRandomWord (int size ){
-		return getRandomWord ("", size, map);
+	public String getRandomWord (){
+
+		java.util.Random rand = new java.util.Random ();
+		int pos = rand.nextInt ( possibleWordsArray.size() );
+
+		return possibleWordsArray.get(pos);
+		//return getRandomWord ("", WordTree.GAME_WORD_SIZE, map);
 	}
 
 	private String getRandomWord(String carry, int size, java.util.HashMap < Character, java.util.HashMap > aMap) {
@@ -163,7 +169,6 @@ public class WordTree {
 
 		//Get the keys of the HashMap and randomize their entry.
 		Set<Character> keySet = aMap.keySet();
-
 
 		String letters = "";
 		int i = 0;
@@ -198,7 +203,7 @@ public class WordTree {
 		wt.addWordsFromTextFile(WORDS);
 		java.util.ArrayList <String> words; // = wt.getAllWords();
 
-		String word = wt.getRandomWord(WordTree.GAME_WORD_SIZE);
+		String word = wt.getRandomWord();
 		System.out.println (word);
 		String word2 = "";
 
@@ -209,7 +214,6 @@ public class WordTree {
 			if ( word2.length() >= WordTree.MIN_WORD_SIZE )
 			System.out.println ( word2);
 		}
-		
 
 	}
 
