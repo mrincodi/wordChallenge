@@ -9,7 +9,10 @@ public class WordChallenge {
 		
 	
 	/**
-	 * Primera aproximación. Sólo texto.
+	 * First approximation. Text only.
+	 * TODO: Add options for scrambling letters.
+	 * TODO: Present clues in 3 columns.
+	 * TODO: "Lemario" needs to be cleaned of words that start with "-" and words with capital letters.
 	 * @param args
 	 * @throws IOException 
 	 */
