@@ -1,5 +1,8 @@
 package gameintext;
 
+import java.io.IOException;
+import java.util.ArrayList;
+
 /**
  * This class implements a "word tree" for a dictionary.
  * It makes looking for words extremely fast.
@@ -24,26 +27,88 @@ package gameintext;
 
 import java.util.Set;
 
-public class WordTree {
-	private char LEAF='+';
-	private String NO_WORD_FOUND="++";
-	public static int MIN_WORD_SIZE=3;	// Just for the main method.
-	public static int GAME_WORD_SIZE=6;	// Just for the main method.
+public abstract class WordTree {
+	private static char LEAF='+';
+	private static String NO_WORD_FOUND="++";
+	private static int MIN_WORD_SIZE_DEFAULT=3;	// Just for the main method.
+	private static int GAME_WORD_SIZE_DEFAULT=6;	// Just for the main method.
 
 	//TODO: Clean the Spanish "lemario". Take out words with capital letters.
 	//TODO: Also (maybe), consider making 'á' equivalent to 'a' and so forth (although I like
 	//		to consider them as different letters).
 	//FYI: The lemario was downloaded from here:  http://www.teoruiz.com/lemario
-	static String WORDS="etc/lemario-20101017.txt";
-	java.util.HashMap < Character, java.util.HashMap > map;
-
-	java.util.ArrayList <String > possibleWordsArray = new java.util.ArrayList <String > ();
+	private static String WORDS="etc/lemario-20101017.txt";
+	private static int gameWordSize = GAME_WORD_SIZE_DEFAULT;
+	private static int minWordSize = MIN_WORD_SIZE_DEFAULT;
 	
-	public WordTree (){
-		map = new java.util.HashMap <Character, java.util.HashMap >  ();
+	static java.util.HashMap < Character, java.util.HashMap > map = new java.util.HashMap <Character, java.util.HashMap >  ();
+
+	//TODO: Instead of an ArrayList with possible words, i should actually have a list of unique possible sets of characters
+	// to play with. gameWordSize-sized words with a lot of anagrams have (very slightly) more chance
+	// of being chosen.
+	static java.util.ArrayList <String > possibleWordsArray = new java.util.ArrayList <String > ();
+	
+	static java.util.ArrayList < String > words = new java.util.ArrayList <String > ();
+	static java.util.ArrayList < String > clues = new java.util.ArrayList <String > ();
+	
+	static char [] gameLetters; 
+	
+
+	public static void initialize (int wordSize) throws IOException{
+		setGameWordSize (wordSize);
+		
+		//Populate the map.
+		addWordsFromTextFile ( WORDS );
+	
+		// Set some letters to play with:
+		gameLetters = getRandomWord().toCharArray();
+		randomizeChars();
+
+		//Find out the words that have these letters (why wait?).
+		getAllWordsWithLetters ();
+
+		//Wonderful. Finally, populate the "clues" array.
+		populateClues ();
+	}
+	
+	private static void populateClues() {
+		for (int i = 0; i < words.size(); i++){
+			String word = words.get(i);
+			String stars = "";
+			for (int j = 0; j<word.length(); j++){
+				stars += "*"; //TODO: There is a way to make this better, right?
+			}
+			clues.add(stars);
+		}
 	}
 
-	public void addWordsFromTextFile ( String filename ) throws java.io.IOException{
+	public static void initialize (int minWordSize, int wordSize) throws IOException{
+		setMinWordSize (minWordSize);
+		initialize (wordSize);
+	}
+	
+	private static void setMinWordSize(int theMinWordSize) {
+		minWordSize=theMinWordSize;
+	}
+
+	public static int getGameWordSize (){
+		return gameWordSize;
+	}
+	
+	public static void setGameWordSize (int wordSize){
+		gameWordSize = wordSize;
+	}
+	
+	public static char [] getGameletters (){
+		return gameLetters;
+	}
+	
+	/**
+	 * This method adds the words from a file with a list of words to the map.
+	 * @param filename
+	 * @throws java.io.IOException
+	 */
+	public static void addWordsFromTextFile ( String filename ) throws java.io.IOException{
 		java.io.BufferedReader br = new java.io.BufferedReader(
 				   new java.io.InputStreamReader(
 		                      new java.io.FileInputStream(filename), "UTF8"));
@@ -57,20 +122,20 @@ public class WordTree {
 		br.close();
 	}
 
-	public void addWords ( String [] words){
-		for ( int i = 0; i < words.length; i++ ){
-			addWord (  words [ i ]);			
-		}
-	}
-
-	public void addWord ( String word ){
+	/**
+	 * Adds a word to the map. Also, if the word has the gameWordSize, add it as a
+	 * possible word for us to play with.
+	 * 
+	 * @param word
+	 */
+	public static void addWord ( String word ){
 		addWord ( word, map);
-		if ( word.length() == GAME_WORD_SIZE) {
+		if ( word.length() == gameWordSize) {
 			possibleWordsArray.add(word);
 		}
 	}
 
-	public void addWord ( String word, java.util.HashMap < Character, java.util.HashMap > aMap){
+	public static void addWord ( String word, java.util.HashMap < Character, java.util.HashMap > aMap){
 		if ( aMap == null ) return ; //TODO: Actually, throw exception.
 
 		if ( word.length() == 0 ) {
@@ -102,14 +167,24 @@ public class WordTree {
 		return returnArrayList;
 	}
 
-	public java.util.ArrayList < String > getAllWordsWithLetters ( String chars ){
+	public static void getAllWordsWithLetters (  ){
 
 		//Just sort the string
-		char [] charArray = chars.toCharArray();
+		char [] charArray = gameLetters.clone();
+
 		java.util.Arrays.sort(charArray);
 		String sortedChars =new String ( charArray );
 
-		return getAllWordsWithLetters ("", sortedChars, map );
+		java.util.ArrayList < String > allWords = getAllWordsWithLetters ("", sortedChars, map );
+		java.util.ArrayList < String > rightWords = new java.util.ArrayList < String > (); 
+		
+		for ( int i = 0; i < allWords.size(); i++){
+			String word = allWords.get(i);
+			if ( word.length() >= minWordSize ){
+				rightWords.add(word);
+			}
+		}
+		words = rightWords;
 	}
 
 
@@ -123,7 +198,7 @@ public class WordTree {
 	 * @return
 	 */
 
-	private java.util.ArrayList<String> getAllWordsWithLetters(String carry, String sortedChars,
+	private static java.util.ArrayList<String> getAllWordsWithLetters(String carry, String sortedChars,
 			java.util.HashMap<Character, java.util.HashMap> aMap) {
 
 		java.util.ArrayList<String> wordList = new java.util.ArrayList<String> ();
@@ -152,13 +227,15 @@ public class WordTree {
 		return wordList;
 	}
 
-	public String getRandomWord (){
-
+	/**
+	 * Just get a random word from the array of possible words.
+	 * @returnThe random word.
+	 */
+	public static String getRandomWord (){
 		java.util.Random rand = new java.util.Random ();
 		int pos = rand.nextInt ( possibleWordsArray.size() );
 
 		return possibleWordsArray.get(pos);
-		//return getRandomWord ("", WordTree.GAME_WORD_SIZE, map);
 	}
 
 	private String getRandomWord(String carry, int size, java.util.HashMap < Character, java.util.HashMap > aMap) {
@@ -198,23 +275,104 @@ public class WordTree {
 	}
 
 	public static void main ( String [] args ) throws java.io.IOException{
-		WordTree wt = new WordTree ();
+//		WordTree wt = new WordTree ();
+//
+//		wt.addWordsFromTextFile(WORDS);
+//		java.util.ArrayList <String> words; // = wt.getAllWords();
+//
+//		String word = wt.getRandomWord();
+//		System.out.println (word);
+//		String word2 = "";
+//
+//		//words= wt.getAllWords();
+//		words = wt.getAllWordsWithLetters ( word );
+//		for ( int i = 0; i < words.size(); i++){
+//			word2 = words.get(i);
+//			if ( word2.length() >= WordTree.MIN_WORD_SIZE )
+//			System.out.println ( word2);
+//		}
 
-		wt.addWordsFromTextFile(WORDS);
-		java.util.ArrayList <String> words; // = wt.getAllWords();
 
-		String word = wt.getRandomWord();
-		System.out.println (word);
-		String word2 = "";
-
-		//words= wt.getAllWords();
-		words = wt.getAllWordsWithLetters ( word );
-		for ( int i = 0; i < words.size(); i++){
-			word2 = words.get(i);
-			if ( word2.length() >= WordTree.MIN_WORD_SIZE )
-			System.out.println ( word2);
+		
+	}
+	
+	/**
+	 * This method just randomizes an array of letters.
+	 * @param letters
+	 * @return The array, randomized.
+	 */
+	public static void randomizeChars() {
+		
+		char [] remainingLetters = gameLetters.clone();
+		char [] scrambledLetters = new char [ gameLetters.length ];
+		
+		int i = 0;
+		while ( remainingLetters.length > 0 ){
+			int newIndex = new java.util.Random().nextInt(remainingLetters.length);
+			char letter = remainingLetters [ newIndex ];
+			scrambledLetters [ i++ ] = letter;
+			
+			char [] newRemainingLetters = new char [ remainingLetters.length - 1 ];
+			int indexNewRemainingLetters = 0;
+			
+			for (int indexRemainingLetters = 0; indexRemainingLetters < remainingLetters.length; indexRemainingLetters++){
+				if ( indexRemainingLetters != newIndex){
+					newRemainingLetters [ indexNewRemainingLetters ] = remainingLetters [ indexRemainingLetters];
+					indexNewRemainingLetters++;
+				}
+			}
+			remainingLetters = newRemainingLetters;
 		}
+		
+		gameLetters = scrambledLetters;
+	}
+//		// TODO Auto-generated method stub
+//		char [] newArray = new char [letters.length];
+//		
+//		java.util.HashSet <Integer > positions = new java.util.HashSet<Integer>();
+//		
+//		for ( int i = 0; i < letters.length; i++){
+//			positions.add(i);
+//		}
+//		
+//		int randomIndexInSet = 0;
+//		int randomIndexInWord = 0;
+//		int i = 0;
+//		while ( positions.size() > 0){
+//			//get random number.
+//			java.util.Random r = new java.util.Random ();
+//			randomIndexInSet = r.nextInt( positions.size());
+//			Integer [] availablePositions = positions.toArray(new Integer [positions.size()]);
+//			randomIndexInWord = availablePositions [ randomIndexInSet ];
+//			
+//			newArray [ i++ ] = letters [ randomIndexInWord ];
+//			positions.remove(randomIndexInWord);
+//		}
+//		
+//		
+//		return null;
+//	}
 
+	public static ArrayList<String> getWords() {
+		return words;
+	}
+
+	public static ArrayList<String> getClues() {
+		return clues;
+	}
+
+	public static boolean validateWord(String aWord) {
+		// Is aWord inside words?
+		//TODO: Enhance. The words are sorted lexicographically, so you don't need to get to the end.
+		for ( int i = 0; i < words.size(); i++){
+			
+			if (aWord.compareTo(words.get(i)) == 0){
+				clues.set(i, aWord);
+				return true;
+			}
+		}
+		return false;
+			
 	}
 
 }
