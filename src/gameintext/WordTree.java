@@ -238,41 +238,46 @@ public abstract class WordTree {
 		return possibleWordsArray.get(pos);
 	}
 
-	private String getRandomWord(String carry, int size, java.util.HashMap < Character, java.util.HashMap > aMap) {
-		if ( size == 0){
-			if ( aMap.containsKey(LEAF)) return carry;
-			else return NO_WORD_FOUND;
-		}
-
-		//Get the keys of the HashMap and randomize their entry.
-		Set<Character> keySet = aMap.keySet();
-
-		String letters = "";
-		int i = 0;
-		for ( char ch : keySet){
-			if ( ch != LEAF) letters = letters + ch;
-		}
-
-		while ( letters.length() > 0 ){
-			//Get a random number from 1 to the size of the string.
-			java.util.Random rand = new java.util.Random ();
-			int pos = rand.nextInt ( letters.length() );
-			char selectedChar = letters.charAt(pos);
-
-			// The partial word is newCarry:
-			String newCarry = carry + selectedChar;
-
-			String possibleNewWord = getRandomWord ( newCarry, size - 1, aMap.get(selectedChar));
-
-			if ( possibleNewWord != NO_WORD_FOUND ) return possibleNewWord;
-
-			//Well, that letter didn't work, so go to the next:
-			letters = letters.substring(0,pos) + letters.substring(pos+1, letters.length());
-		}
-		
-		//If totally no word found, return NO_WORD_FOUND.
-		return NO_WORD_FOUND;
-	}
+/**
+ * TODO: The following is not really a random word search, so just remove this method.
+ * @param args
+ * @throws java.io.IOException
+ */
+//	private String getRandomWord(String carry, int size, java.util.HashMap < Character, java.util.HashMap > aMap) {
+//		if ( size == 0){
+//			if ( aMap.containsKey(LEAF)) return carry;
+//			else return NO_WORD_FOUND;
+//		}
+//
+//		//Get the keys of the HashMap and randomize their entry.
+//		Set<Character> keySet = aMap.keySet();
+//
+//		String letters = "";
+//		int i = 0;
+//		for ( char ch : keySet){
+//			if ( ch != LEAF) letters = letters + ch;
+//		}
+//
+//		while ( letters.length() > 0 ){
+//			//Get a random number from 1 to the size of the string.
+//			java.util.Random rand = new java.util.Random ();
+//			int pos = rand.nextInt ( letters.length() );
+//			char selectedChar = letters.charAt(pos);
+//
+//			// The partial word is newCarry:
+//			String newCarry = carry + selectedChar;
+//
+//			String possibleNewWord = getRandomWord ( newCarry, size - 1, aMap.get(selectedChar));
+//
+//			if ( possibleNewWord != NO_WORD_FOUND ) return possibleNewWord;
+//
+//			//Well, that letter didn't work, so go to the next:
+//			letters = letters.substring(0,pos) + letters.substring(pos+1, letters.length());
+//		}
+//		
+//		//If totally no word found, return NO_WORD_FOUND.
+//		return NO_WORD_FOUND;
+//	}
 
 	public static void main ( String [] args ) throws java.io.IOException{
 //		WordTree wt = new WordTree ();
@@ -361,6 +366,8 @@ public abstract class WordTree {
 		return clues;
 	}
 
+	//TODO: This works well in Eclipse, but fails in command line
+	//when the word has accents (like á).
 	public static boolean validateWord(String aWord) {
 		// Is aWord inside words?
 		//TODO: Enhance. The words are sorted lexicographically, so you don't need to get to the end.

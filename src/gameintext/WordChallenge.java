@@ -33,7 +33,6 @@ public class WordChallenge {
 		
 		while (!allGuessed){
 			
-			// Mañana: esto debe establecerse al principio de la clase.
 			TextScreen.printLetters(WordTree.getGameletters());
 		
 			//TextScreen.printSomeWords ();
